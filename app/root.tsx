@@ -4,13 +4,14 @@ import type { LinksFunction } from "@remix-run/node";
 
 import {
   Form,
-  Link,
   Links,
   Meta,
+  NavLink,
   Outlet,
   Scripts,
   ScrollRestoration,
   useLoaderData,
+  useNavigation,
 } from "@remix-run/react";
 
 // Loader関数とAction関数
@@ -43,6 +44,8 @@ export const action = async() => {
 export default function App() {
   // Loader関数で読み込んだデータの利用！！！！！
   const { contacts } = useLoaderData<typeof loader>();
+  // Navigationの管理。読み込み中の細かい挙動を制御
+  const navigation = useNavigation();
 
   return (
     <html lang="en">
@@ -76,7 +79,18 @@ export default function App() {
               <ul>
                 {contacts.map((contact) => (
                   <li key={contact.id}>
-                    <Link to={`contacts/${contact.id}`}>
+                    {/* Navlink toのURLにいるとき、isActiveはtrueになる。
+                    Navlink toのURLに行こうと読み込み中のとき、isPendingがtrueになる。 */}
+                    <NavLink
+                      className={({ isActive, isPending }) =>
+                        isActive
+                          ? "active"
+                          : isPending
+                          ? "pending"
+                          : ""
+                      }
+                      to={`contacts/${contact.id}`}
+                    >
                       {contact.first || contact.last ? (
                         <>
                           {contact.first} {contact.last}
@@ -87,7 +101,7 @@ export default function App() {
                       {contact.favorite ? (
                         <span>★</span>
                       ) : null}
-                    </Link>
+                    </NavLink>
                   </li>
                 ))}
               </ul>
@@ -98,7 +112,14 @@ export default function App() {
             )}
           </nav>
         </div>
-        <div id="detail">
+        <div
+          // useNavigationで状態を管理することで読み込み中の細かい挙動をいい感じにする
+          // このdivはOutletの、つまり連絡先表示部分全てにかかるdiv
+          className={
+            navigation.state === "loading" ? "loading" : ""
+          }
+          id="detail"
+        >
           <Outlet />
         </div>
         <ScrollRestoration />

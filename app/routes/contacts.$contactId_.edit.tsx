@@ -3,7 +3,7 @@ import type {
   ActionFunctionArgs,
 } from "@remix-run/node";
 import { json, redirect } from "@remix-run/node";
-import { Form, useLoaderData } from "@remix-run/react";
+import { Form, useLoaderData, useNavigate, } from "@remix-run/react";
 import invariant from "tiny-invariant";
 
 import { getContact,updateContact } from "../data";
@@ -40,6 +40,8 @@ export const action = async ({
 
 export default function EditContact() {
   const { contact } = useLoaderData<typeof loader>();
+  // キャンセルボタンの実装のためのuseNavigate
+  const navigate = useNavigate();
 
   return (
     <Form key={contact.id} id="contact-form" method="post">
@@ -90,7 +92,10 @@ export default function EditContact() {
       <p>
         {/* submitを持ったボタンSaveが押されたら上のAction関数が呼ばれる */}
         <button type="submit">Save</button>
-        <button type="button">Cancel</button>
+        {/* useNavigateを使って、戻るボタンと同様の機能をキャンセルボタンに実装 */}
+        <button type="button" onClick={()=>navigate(-1)}>
+          Cancel
+        </button>
       </p>
     </Form>
   );
