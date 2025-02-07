@@ -101,7 +101,7 @@ export default function App() {
               role="search"
               // 検索窓の入力内容をリアルタイム反映
               onChange={(event) => {
-                // ただし
+                // 履歴が溜まらないように
                 const isFirstSearch = q === null;
                 submit(event.currentTarget, {
                   replace: !isFirstSearch,

@@ -1,14 +1,14 @@
-import { Form, useLoaderData } from "@remix-run/react";
+import { Form, useLoaderData, useFetcher } from "@remix-run/react";
 import { json } from "@remix-run/node";
 import type { FunctionComponent } from "react";
 // Loader関数の引数の型の安全性検証
-import type { LoaderFunctionArgs } from "@remix-run/node";
+import type { LoaderFunctionArgs, ActionFunctionArgs } from "@remix-run/node";
 import invariant from "tiny-invariant";
 
 // import typeでインポートしてるのがdata.tsの前半にあるデータベースそのものの関数って感じで
 // importでインポートしてるのはdata.tsの後半にある高度なヘルパー関数
 import type { ContactRecord } from "../data";
-import { getContact } from "../data";
+import { getContact, updateContact } from "../data";
 
 // Loader関数！！！！！
 export const loader = async ({
@@ -24,6 +24,24 @@ export const loader = async ({
   }
   return json({ contact });
 };
+
+
+// Action関数！！！！！お気に入りの管理。fetcher.Formで呼び出す
+// Formとの違いは、URLが変わらないところ
+export const action = async ({
+  params,
+  request,
+}: ActionFunctionArgs) => {
+  invariant(params.contactId, "Missing contactId param");
+  const formData = await request.formData();
+  return updateContact(params.contactId, {
+    // 「送信された状態がtrueかどうか」をfavoriteに設定する、という荒技
+    favorite: formData.get("favorite") === "true",
+  });
+};
+// Action関数だから実行後に自動レンダリングされるのは一緒（サイドバーも自動更新）
+
+
 
 export default function Contact() {
   // Loader関数で読み込んだデータの使用！！！！！
@@ -91,10 +109,15 @@ export default function Contact() {
 const Favorite: FunctionComponent<{
   contact: Pick<ContactRecord, "favorite">;
 }> = ({ contact }) => {
-  const favorite = contact.favorite;
+  const fetcher = useFetcher();
+  // const favorite = contact.favorite;
+  // 楽観的UI＝
+  const favorite = fetcher.formData
+    ? fetcher.formData.get("favorite") === "true"
+    : contact.favorite;
 
   return (
-    <Form method="post">
+    <fetcher.Form method="post">
       <button
         aria-label={
           favorite
@@ -106,7 +129,7 @@ const Favorite: FunctionComponent<{
       >
         {favorite ? "★" : "☆"}
       </button>
-    </Form>
+    </fetcher.Form>
   );
 };
 
