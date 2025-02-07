@@ -1,4 +1,4 @@
-import { json } from "@remix-run/node";
+import { json, redirect } from "@remix-run/node";
 // CSSの読み込み
 import type { LinksFunction } from "@remix-run/node";
 
@@ -13,7 +13,8 @@ import {
   useLoaderData,
 } from "@remix-run/react";
 
-import { getContacts } from "./data";
+// Loader関数とAction関数
+import { getContacts, createEmptyContact } from "./data";
 
 // CSSの読み込み
 import appStylesHref from "./app.css?url";
@@ -22,9 +23,20 @@ export const links: LinksFunction = () => [
 ];
 
 // Loader関数！！！！！
+// データを取得してサイドバーに表示
 export const loader = async () => {
   const contacts = await getContacts();
   return json({ contacts });
+};
+
+// Action関数！！！！！
+// Newボタンは（特殊な）Formタグで囲まれているので、押されたら自動でここのAction関数が呼ばれる
+// そして、Action関数が完了するとLoader関数が再検証される仕組みに、もうRemixがなっている！
+// なので勝手にサイドバーも更新される
+export const action = async() => {
+  const contact = await createEmptyContact();
+  // Newボタンを押したら自動で編集画面にリダイレクト
+  return redirect(`/contacts/${contact.id}/edit`);
 };
 
 

@@ -87,6 +87,7 @@ export async function updateContact(id: string, updates: ContactMutation) {
   if (!contact) {
     throw new Error(`No contact found for ${id}`);
   }
+  // このスプレッド構文2個連続で、同じプロパティ名のものは自動的にマージされて更新されるらしい
   await fakeContacts.set(id, { ...contact, ...updates });
   return contact;
 }
