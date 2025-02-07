@@ -1,12 +1,37 @@
+import { json } from "@remix-run/node";
+// CSSの読み込み
+import type { LinksFunction } from "@remix-run/node";
+
 import {
   Form,
+  Link,
   Links,
   Meta,
+  Outlet,
   Scripts,
   ScrollRestoration,
+  useLoaderData,
 } from "@remix-run/react";
 
+import { getContacts } from "./data";
+
+// CSSの読み込み
+import appStylesHref from "./app.css?url";
+export const links: LinksFunction = () => [
+  { rel: "stylesheet", href: appStylesHref },
+];
+
+// Loader関数！！！！！
+export const loader = async () => {
+  const contacts = await getContacts();
+  return json({ contacts });
+};
+
+
 export default function App() {
+  // Loader関数で読み込んだデータの利用！！！！！
+  const { contacts } = useLoaderData<typeof loader>();
+
   return (
     <html lang="en">
       <head>
@@ -23,7 +48,7 @@ export default function App() {
               <input
                 id="q"
                 aria-label="Search contacts"
-                placeholder="Search"
+                placeholder="Search!!"
                 type="search"
                 name="q"
               />
@@ -34,17 +59,36 @@ export default function App() {
             </Form>
           </div>
           <nav>
-            <ul>
-              <li>
-                <a href={`/contacts/1`}>Your Name</a>
-              </li>
-              <li>
-                <a href={`/contacts/2`}>Your Friend</a>
-              </li>
-            </ul>
+            {/* Loader関数でとってきたデータcontactsを使う */}
+            {contacts.length ? (
+              <ul>
+                {contacts.map((contact) => (
+                  <li key={contact.id}>
+                    <Link to={`contacts/${contact.id}`}>
+                      {contact.first || contact.last ? (
+                        <>
+                          {contact.first} {contact.last}
+                        </>
+                      ) : (
+                        <i>No Name</i>
+                      )}{" "}
+                      {contact.favorite ? (
+                        <span>★</span>
+                      ) : null}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p>
+                <i>No contacts</i>
+              </p>
+            )}
           </nav>
         </div>
-
+        <div id="detail">
+          <Outlet />
+        </div>
         <ScrollRestoration />
         <Scripts />
       </body>
